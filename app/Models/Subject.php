@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TaskStatus extends Model
+class Subject extends Model
 {
+    //
     use HasFactory;
-    protected $table = 'task_status';
-    protected $fillable = ["status"];
+
+    protected $table = 'subjects';
+    protected $fillable = ["name"];
 
     public function tasks()
     {
-        return $this->hasMany(Task::class, "status_id");
+        return $this->hasMany(Task::class, "subject_id");
     }
-
-
 }
