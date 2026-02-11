@@ -9,36 +9,32 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // ADD
-            $table->string('username')->unique()->after('id');
-            $table->string('role')->default('user')->after('email');
+            if (!Schema::hasColumn('users', 'username')) {
+                $table->string('username');
+            }
 
-            // DROP
-            $table->dropColumn([
-                'password',
-                'email_verified_at',
-                'remember_token',
-            ]);
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->string('role')->default('user');
+            }
+
+            $drop = [];
+            foreach (['password', 'email_verified_at', 'remember_token'] as $col) {
+                if (Schema::hasColumn('users', $col)) {
+                    $drop[] = $col;
+                }
+            }
+            if ($drop) {
+                $table->dropColumn($drop);
+            }
         });
 
-        // DROP unused tables
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            // RESTORE dropped columns
-            $table->string('password');
-            $table->timestamp('email_verified_at')->nullable();
-            $table->rememberToken();
-
-            // REMOVE added columns
-            $table->dropColumn(['username', 'role']);
-        });
-
-        // RESTORE tables
+        // Restore tables first (optional), then columns.
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
@@ -52,6 +48,28 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
+        });
+
+        Schema::table('users', function (Blueprint $table) {
+            if (!Schema::hasColumn('users', 'password')) {
+                $table->string('password');
+            }
+            if (!Schema::hasColumn('users', 'email_verified_at')) {
+                $table->timestamp('email_verified_at')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'remember_token')) {
+                $table->rememberToken();
+            }
+
+            $drop = [];
+            foreach (['username', 'role'] as $col) {
+                if (Schema::hasColumn('users', $col)) {
+                    $drop[] = $col;
+                }
+            }
+            if ($drop) {
+                $table->dropColumn($drop);
+            }
         });
     }
 };
