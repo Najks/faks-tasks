@@ -42,14 +42,25 @@ class TaskController extends Controller
         return response()->noContent();
     }
 
+    public function allTasksFromUser(int $userId)
+    {
+        $tasks = Task::where('user_id', $userId)->get();
+        return response()->json($tasks);
+    }
+
     private function validatedTaskData(Request $request): array
     {
         return $request->validate([
             'title' => ['required', 'string'],
             'description' => ['nullable', 'string'],
-            'status_id' => ['required', 'exists:task_status,id'],
-            'subject_id' => ['required', 'exists:subjects,id'],
-            'user_id' => ['required', 'exists:users,id'],
+            'due_date' => ['required', 'date'],
+            'grade' => ['required', 'string'],
+            'status_id' => ['required', 'int'],
+            'subject_id' => ['required', 'int'],
+            'user_id' => ['required', 'int'],
         ]);
     }
+
+
+
 }
