@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use Illuminate\Auth\Access\Gate;
 use Illuminate\Http\Request;
+use \Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Log;
+
 
 class TaskController extends Controller
 {
+    use AuthorizesRequests;
     public function index()
     {
         return response()->json(Task::all());
@@ -15,10 +20,14 @@ class TaskController extends Controller
     public function store(Request $request)
     {
         $data = $this->validatedTaskData($request);
+        $data['user_id'] = $request->user()->id;
 
-        $task = Task::create($data);
-
-        return response()->json($task, 201);
+        try {
+            $task = Task::create($data);
+            return response()->json($task, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 
     public function show(Task $task)
@@ -29,6 +38,7 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $data = $this->validatedTaskData($request);
+        $this->authorize("update", $task);
 
         $task->update($data);
 
@@ -57,7 +67,6 @@ class TaskController extends Controller
             'grade' => ['required', 'string'],
             'status_id' => ['required', 'int'],
             'subject_id' => ['required', 'int'],
-            'user_id' => ['required', 'int'],
         ]);
     }
 

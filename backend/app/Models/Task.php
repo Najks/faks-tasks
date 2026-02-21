@@ -11,12 +11,13 @@ class Task extends Model
     use HasFactory;
     protected $table = 'tasks';
     protected $fillable = [
-        "title",
-        "due_date",
-        "grade",
-        "user_id",
-        "subject_id",
-        "status_id"
+        'title',
+        'description',
+        'due_date',
+        'grade',
+        'status_id',
+        'subject_id',
+        'user_id',
     ];
 
     protected $casts = [

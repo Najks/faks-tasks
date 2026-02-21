@@ -18,6 +18,7 @@ class TaskStatusSeeder extends Seeder
         $statuses = [
             "not_started",
             "started",
+            "turened in",
             "completed"
         ];
 
