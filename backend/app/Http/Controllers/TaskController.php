@@ -54,7 +54,11 @@ class TaskController extends Controller
 
     public function allTasksFromUser(int $userId)
     {
-        $tasks = Task::where('user_id', $userId)->get();
+        try {
+            $tasks = Task::where('user_id', $userId)->get();
+        } catch (\Exception $exception){
+            return response()->json(["message" => "error while getting user"]);
+        }
         return response()->json($tasks);
     }
 
