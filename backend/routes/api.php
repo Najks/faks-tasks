@@ -25,5 +25,9 @@ Route::prefix("auth")->name("auth.")->group(function () {
     Route::middleware("auth:sanctum")->group(function () {
         Route::post("logout", [AuthController::class, "logout"]);
         Route::get("me", [AuthController::class, "me"]);
+        Route::patch("me", [AuthController::class, "update"]);
     });
+    Route::post('password/request', [AuthController::class, 'requestPasswordReset']);
+    Route::post('password/reset', [AuthController::class, 'resetPassword']);
+    Route::post('password/reset/simple', [AuthController::class, 'resetPasswordSimple']);
 });
