@@ -4,13 +4,17 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
-const { user, logout } = useAuth()
+const { user, logout, isAuthenticated } = useAuth()
 const userName = computed(() => user.value?.name ?? 'Student')
 const userInitial = computed(() => (user.value?.name ? user.value.name.charAt(0).toUpperCase() : 'S'))
-const navLinks = [
+const authLinks = [
   { label: 'Home', to: { name: 'Home' } },
   { label: 'Manage Subjects', to: { name: 'ManageSubjects' } },
   { label: 'Overview', to: { name: 'User' } }
+]
+const guestLinks = [
+  { label: 'Login', to: { name: 'Login' } },
+  { label: 'Register', to: { name: 'Register' } }
 ]
 
 const handleLogout = () => {
@@ -36,23 +40,22 @@ const handleLogout = () => {
       </button>
       <div class="collapse navbar-collapse" id="mainNavbar">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-          <li v-for="link in navLinks" :key="link.label" class="nav-item">
-            <router-link
-              class="nav-link"
-              :to="link.to"
-            >
-              {{ link.label }}
-            </router-link>
+          <li
+            v-for="link in isAuthenticated ? authLinks : guestLinks"
+            :key="link.label"
+            class="nav-item"
+          >
+            <router-link class="nav-link" :to="link.to">{{ link.label }}</router-link>
           </li>
         </ul>
         <div class="d-flex align-items-center gap-3 ms-lg-4">
-          <div class="user-pill d-flex align-items-center gap-3">
+          <div v-if="isAuthenticated" class="user-pill d-flex align-items-center gap-3">
             <div class="avatar">{{ userInitial }}</div>
             <div>
               <div class="fw-semibold mb-0">{{ userName }}</div>
             </div>
           </div>
-          <button class="btn btn-outline-danger btn-sm" @click="handleLogout">
+          <button v-if="isAuthenticated" class="btn btn-outline-danger btn-sm" @click="handleLogout">
             Logout
           </button>
         </div>
