@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TaskStatusController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -10,6 +11,8 @@ Route::put('/status/{taskStatus}', [TaskStatusController::class, 'update']);
 Route::apiResource("status", \App\Http\Controllers\TaskStatusController::class);
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource("tasks", \App\Http\Controllers\TaskController::class);
+    Route::patch('/tasks/{task}/status', [\App\Http\Controllers\TaskController::class, 'updateStatus']);
+    Route::get('/subjects/mine', [SubjectController::class, 'mine']);
 });
 Route::apiResource("subjects", \App\Http\Controllers\SubjectController::class);
 
@@ -24,4 +27,3 @@ Route::prefix("auth")->name("auth.")->group(function () {
         Route::get("me", [AuthController::class, "me"]);
     });
 });
-

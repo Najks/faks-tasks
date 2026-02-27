@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subject;
+use App\Models\TaskStatus;
 use Illuminate\Http\Request;
 
 class SubjectController extends Controller
@@ -14,6 +15,26 @@ class SubjectController extends Controller
     {
         //
             return response()->json(Subject::all());
+    }
+
+    public function mine(Request $request)
+    {
+        $user = $request->user();
+
+        $completedStatusId = TaskStatus::where('status', 'completed')->value('id');
+
+        $subjects = Subject::with([
+            'tasks' => fn ($query) => $query->where('user_id', $user->id)->with('status'),
+        ])
+            ->withCount([
+                'tasks as my_tasks_count' => fn ($query) => $query->where('user_id', $user->id),
+                'tasks as my_pending_tasks_count' => fn ($query) => $query
+                    ->where('user_id', $user->id)
+                    ->when($completedStatusId, fn ($query) => $query->where('status_id', '<>', $completedStatusId)),
+            ])
+            ->get();
+
+        return response()->json($subjects);
     }
 
     /**
