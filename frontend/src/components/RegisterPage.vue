@@ -8,6 +8,7 @@ const router = useRouter()
 const { register, loading, error } = useAuth()
 
 const form = ref({
+  username: '',
   name: '',
   email: '',
   password: '',
@@ -38,7 +39,18 @@ const passwordsMatch = () => form.value.password === form.value.passwordConfirma
 
         <form @submit.prevent="handleSubmit" class="needs-validation" novalidate>
           <div class="mb-3">
-            <label for="name" class="form-label">Name</label>
+            <label for="username" class="form-label">Username</label>
+            <input
+              id="username"
+              v-model="form.username"
+              type="text"
+              required
+              class="form-control"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="name" class="form-label">Full name</label>
             <input
               id="name"
               v-model="form.name"

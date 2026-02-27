@@ -66,6 +66,10 @@ const handleSubmit = async () => {
           </button>
         </form>
 
+        <p class="text-center text-muted mt-3 mb-0">
+          <router-link to="/password/forgot" class="link-secondary">Forgot password?</router-link>
+        </p>
+
         <p class="text-center text-muted mt-4 mb-0">
           Don't have an account?
           <router-link to="/register" class="link-primary">Register</router-link>

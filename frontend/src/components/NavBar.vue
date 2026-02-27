@@ -9,6 +9,7 @@ const userName = computed(() => user.value?.name ?? 'Student')
 const userInitial = computed(() => (user.value?.name ? user.value.name.charAt(0).toUpperCase() : 'S'))
 const navLinks = [
   { label: 'Home', to: { name: 'Home' } },
+  { label: 'Manage Subjects', to: { name: 'ManageSubjects' } },
   { label: 'Overview', to: { name: 'User' } }
 ]
 

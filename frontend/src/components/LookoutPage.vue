@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useSubjects, type Task } from '../composables/useSubjects'
+import { useAuth } from '../composables/useAuth'
+import { useApiRequest } from '../composables/useApiRequest'
 import StatisticsPanel from './StatisticsPanel.vue'
 import UserPanel from './UserPanel.vue'
 
 const { subjects, tasks, loading, error, fetchSubjects } = useSubjects()
+const { user } = useAuth()
+const { patch, loading: passwordLoading, error: passwordError } = useApiRequest()
+
+const password = ref('')
+const confirmPassword = ref('')
+const passwordSuccess = ref('')
+
+const passwordMatches = computed(() => password.value === confirmPassword.value)
 
 const isTaskCompleted = (task: Task) => task.status?.status === 'completed'
 
@@ -31,6 +41,22 @@ const dashboardStats = computed(() => {
 onMounted(async () => {
   await fetchSubjects()
 })
+
+const handlePasswordUpdate = async () => {
+  if (!password.value || !passwordMatches.value) {
+    return
+  }
+
+  passwordSuccess.value = ''
+  try {
+    await patch('/auth/me', { password: password.value }, undefined, 'Failed to update password')
+    passwordSuccess.value = 'Password updated successfully.'
+    password.value = ''
+    confirmPassword.value = ''
+  } catch {
+    // error surfaced through passwordError
+  }
+}
 </script>
 
 <template>
@@ -58,6 +84,34 @@ onMounted(async () => {
           </div>
         </div>
       </div>
+      <div class="card shadow-sm border-0 blurb-card mt-4">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Account</h2>
+          <p class="text-muted">Signed in as <strong>{{ user?.name }}</strong> ({{ user?.email }})</p>
+          <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label" for="newPassword">New password</label>
+              <input id="newPassword" v-model="password" type="password" class="form-control" placeholder="At least 6 characters" />
+            </div>
+            <div class="col-md-5">
+              <label class="form-label" for="confirmPassword">Confirm password</label>
+              <input id="confirmPassword" v-model="confirmPassword" type="password" class="form-control" placeholder="Repeat it" />
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-primary w-100" :disabled="passwordLoading || !passwordMatches" @click="handlePasswordUpdate">
+                <span v-if="passwordLoading" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                Update
+              </button>
+            </div>
+          </div>
+          <div v-if="passwordSuccess" class="alert alert-success mt-3 mb-0">
+            {{ passwordSuccess }}
+          </div>
+          <div v-else-if="passwordError" class="alert alert-danger mt-3 mb-0">
+            {{ passwordError }}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -68,4 +122,3 @@ onMounted(async () => {
   background: linear-gradient(135deg, rgba(13, 110, 253, 0.08), rgba(13, 67, 172, 0.08));
 }
 </style>
-

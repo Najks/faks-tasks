@@ -5,6 +5,7 @@ import RegisterPage from '../components/RegisterPage.vue'
 import SubjectDetailPage from '../components/SubjectDetailPage.vue'
 import TaskDetailEditor from '../components/TaskDetailEditor.vue'
 import LookoutPage from '../components/LookoutPage.vue'
+import ManageSubjectsPage from '../components/ManageSubjectsPage.vue'
 import { useAuth } from '../composables/useAuth'
 const routes = [
     {
@@ -36,10 +37,26 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
+        path: '/subjects/manage',
+        name: 'ManageSubjects',
+        component: ManageSubjectsPage,
+        meta: { requiresAuth: true }
+    },
+    {
         path: '/user',
         name: 'User',
         component: LookoutPage,
         meta: { requiresAuth: true }
+    },
+    {
+        path: '/password/forgot',
+        name: 'ForgotPassword',
+        component: () => import('../components/ForgotPasswordPage.vue')
+    },
+    {
+        path: '/password/reset',
+        name: 'ResetPassword',
+        component: () => import('../components/ResetPasswordPage.vue')
     }
 ]
 
