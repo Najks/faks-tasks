@@ -26,9 +26,16 @@ const createApiClient = () => {
         },
         (error) => {
             console.error('API response error', error.response?.status, error.config?.url, error.response?.data)
-            if (error.response?.status === 401) {
-                localStorage.removeItem('authToken')
-                window.location.href = '/login'
+            // Only perform global redirect on 401 for non-auth endpoints.
+            // If the request was to login/register, let the caller handle the error (so forms can display messages without refresh).
+            const status = error.response?.status
+            const url = error.config?.url || ''
+            if (status === 401) {
+                const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register')
+                if (!isAuthEndpoint) {
+                    localStorage.removeItem('authToken')
+                    window.location.href = '/login'
+                }
             }
             return Promise.reject(error)
         }

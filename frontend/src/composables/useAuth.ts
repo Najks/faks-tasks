@@ -48,13 +48,40 @@ export const useAuth = () => {
     }
 
     const login = async (credentials: LoginRequest) => {
-        const data = await post<AuthResponse>('/auth/login', credentials, undefined, 'Login failed')
-        persistAuth(data)
+        try {
+            const data = await post<AuthResponse>('/auth/login', credentials, undefined, 'Login failed')
+            if (!data || !data.token) {
+                const msg = 'Invalid login response from server.'
+                if (error && 'value' in error) error.value = msg
+                throw new Error(msg)
+            }
+            persistAuth(data)
+            return data
+        } catch (err: any) {
+            // ensure error ref contains a usable message
+            if (error && 'value' in error && !error.value) {
+                error.value = (err && err.message) ? err.message : 'Login failed.'
+            }
+            throw err
+        }
     }
 
     const register = async (credentials: RegisterRequest) => {
-        const data = await post<AuthResponse>('/auth/register', credentials, undefined, 'Registration failed')
-        persistAuth(data)
+        try {
+            const data = await post<AuthResponse>('/auth/register', credentials, undefined, 'Registration failed')
+            if (!data || !data.token) {
+                const msg = 'Invalid registration response from server.'
+                if (error && 'value' in error) error.value = msg
+                throw new Error(msg)
+            }
+            persistAuth(data)
+            return data
+        } catch (err: any) {
+            if (error && 'value' in error && !error.value) {
+                error.value = (err && err.message) ? err.message : 'Registration failed.'
+            }
+            throw err
+        }
     }
 
     const logout = () => {

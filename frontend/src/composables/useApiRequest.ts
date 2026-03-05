@@ -27,7 +27,8 @@ const getErrorMessage = (error: unknown, fallback?: string) => {
 
 export const useApiRequest = () => {
   const loading = ref(false)
-  const error = ref<string | null>(null)
+  // allow structured server error objects (e.g. { message, errors }) as well as strings
+  const error = ref<any>(null)
 
   const execute = async <T>(
     factory: () => Promise<AxiosResponse<T>>,
@@ -39,7 +40,12 @@ export const useApiRequest = () => {
       const response = await factory()
       return response.data
     } catch (err) {
-      error.value = getErrorMessage(err, fallbackMessage)
+      // If server returned structured JSON (axios), keep the full response.data so callers can inspect `message` and `errors`.
+      if (axios.isAxiosError(err) && err.response?.data) {
+        error.value = err.response.data
+      } else {
+        error.value = getErrorMessage(err, fallbackMessage)
+      }
       throw err
     } finally {
       loading.value = false
