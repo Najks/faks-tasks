@@ -33,7 +33,6 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-    command: sh -c "php artisan migrate --force && php artisan db:seed --force && php-fpm"
     restart: unless-stopped
     networks:
       - backend_network

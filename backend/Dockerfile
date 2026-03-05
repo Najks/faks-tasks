@@ -9,6 +9,9 @@ RUN apk add --no-cache bash git icu-dev libzip-dev libpng-dev libxml2-dev openss
     && rm -rf /var/cache/apk/*
 COPY --from=vendor /app/vendor /var/www/html/vendor
 COPY . /var/www/html/
+# copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 WORKDIR /var/www/html
 RUN chown -R www-data:www-data storage bootstrap/cache
 ENV APP_ENV=production
@@ -28,4 +31,6 @@ ENV QUEUE_CONNECTION=sync
 ENV CACHE_DRIVER=file
 ENV BROADCAST_DRIVER=log
 EXPOSE 9000
+# use entrypoint script that runs migrations/seeds once then starts php-fpm
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
