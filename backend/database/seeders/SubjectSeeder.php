@@ -24,7 +24,8 @@ class SubjectSeeder extends Seeder
         ];
 
         foreach ($subjects as $subject) {
-            Subject::create($subject);
+            // create only if a subject with same name doesn't already exist
+            Subject::firstOrCreate(['name' => $subject['name']]);
         }
     }
 }
