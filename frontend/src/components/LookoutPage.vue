@@ -5,6 +5,7 @@ import { useAuth } from '../composables/useAuth'
 import { useApiRequest } from '../composables/useApiRequest'
 import StatisticsPanel from './StatisticsPanel.vue'
 import UserPanel from './UserPanel.vue'
+import { TASK_STATUS } from '../constants/taskStatus'
 
 const { subjects, tasks, loading, error, fetchSubjects } = useSubjects()
 const { user } = useAuth()
@@ -16,7 +17,7 @@ const passwordSuccess = ref('')
 
 const passwordMatches = computed(() => password.value === confirmPassword.value)
 
-const isTaskCompleted = (task: Task) => task.status?.status === 'completed'
+const isTaskCompleted = (task: Task) => task.status?.status === TASK_STATUS.COMPLETED
 
 const dashboardStats = computed(() => {
   const totalTasks = tasks.value.length

@@ -1,1 +1,74 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Mobile-first tweaks to improve spacing and wrapping on small screens */
+:root {
+  --card-radius: 12px;
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+/* Slightly narrower container padding on small devices */
+.container {
+  max-width: 100%;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+@media (min-width: 576px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+.card {
+  border-radius: var(--card-radius);
+}
+
+/* Meta pills wrap and don't force horizontal scroll */
+.meta-pill {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+/* Ensure progress bars and inputs are usable on small screens */
+.progress { height: 8px; }
+
+/* Small-screen specific adjustments */
+@media (max-width: 575.98px) {
+  /* Make cards span available width */
+  .card.shadow-lg { width: 100% !important; }
+
+  /* Keep card body padding comfortable on mobile */
+  .card-body { padding: 1rem; }
+
+  /* Navbar: hide the user pill to avoid overflow; user can open menu for actions */
+  .navbar .user-pill { display: none; }
+
+  .avatar { width: 32px; height: 32px; }
+
+  /* Force stacked layout where desktop uses horizontal */
+  .d-flex.flex-column.flex-md-row,
+  .d-flex.flex-column.flex-md-row > * {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .detail-card .text-md-end { text-align: left !important; }
+  .task-card .card-body { flex-direction: column !important; align-items: flex-start; }
+  .action-card .d-flex.flex-column.flex-md-row { flex-direction: column !important; }
+
+  /* Slightly larger touch targets */
+  .btn, .form-control, .form-select { font-size: 0.95rem; }
+
+  /* Reduce spacing so important content is visible without scrolling */
+  .container.py-5 { padding-top: 2rem; padding-bottom: 2rem; }
+
+  /* Improve list items padding on small screens */
+  .list-group-item { padding: 0.75rem; }
+}
+
+/* Prevent long text from causing horizontal scroll */
+body { word-break: break-word; }

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApiRequest } from '../composables/useApiRequest'
+import { TASK_STATUS } from '../constants/taskStatus'
 
 interface TaskDetail {
   id: number
@@ -51,7 +52,7 @@ const taskId = computed(() => {
 
 const statusLabel = computed(() => task.value?.status?.status ?? 'Unknown')
 const statusBadgeClass = computed(() => {
-  if (task.value?.status?.status === 'completed') {
+  if (task.value?.status?.status === TASK_STATUS.COMPLETED) {
     return 'bg-success text-white'
   }
   if (!task.value?.status?.status) {

@@ -1,20 +1,97 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useSubjects, type Task } from '../composables/useSubjects'
+import { useSubjects, type Task, type TaskStatus } from '../composables/useSubjects'
+import { TASK_STATUS } from '../constants/taskStatus'
+import { useApiRequest } from '../composables/useApiRequest'
 
 const router = useRouter()
 const route = useRoute()
 const { subjects, loading, error, fetchSubjects, updateTaskStatus } = useSubjects()
+const { get, post } = useApiRequest()
+
+// Add Task form state
+const statusesList = ref<TaskStatus[]>([])
+const showAddForm = ref(false)
+const addForm = ref({
+  title: '',
+  description: '',
+  due_date: '',
+  grade: '',
+  status_id: ''
+})
+
+const defaultStatusId = () => {
+  const s = statusesList.value.find(st => st.status === TASK_STATUS.NOT_STARTED)
+  return s?.id ?? statusesList.value[0]?.id ?? null
+}
+
+const loadStatuses = async () => {
+  try {
+    statusesList.value = await get<TaskStatus[]>('/status', undefined, 'Failed to load statuses')
+    // set default status if unset
+    if (!addForm.value.status_id) {
+      const id = defaultStatusId()
+      addForm.value.status_id = id ? String(id) : ''
+    }
+  } catch (e) {
+    statusesList.value = []
+  }
+}
+
+const resetAddForm = () => {
+  addForm.value = { title: '', description: '', due_date: '', grade: '', status_id: String(defaultStatusId() ?? '') }
+}
+
+const validateAddForm = () => {
+  if (!addForm.value.title.trim()) return 'Title is required'
+  if (!addForm.value.due_date) return 'Due date is required'
+  if (!addForm.value.status_id) return 'Status is required'
+  return null
+}
+
+const addLoading = ref(false)
+
+const addTask = async () => {
+  const validationError = validateAddForm()
+  if (validationError) {
+    setError(validationError)
+    return
+  }
+
+  const payload: any = {
+    title: addForm.value.title.trim(),
+    description: addForm.value.description.trim() || null,
+    due_date: addForm.value.due_date,
+    grade: addForm.value.grade === '' ? null : Number(addForm.value.grade),
+    status_id: Number(addForm.value.status_id),
+    subject_id: subjectId
+  }
+
+  addLoading.value = true
+  try {
+    await post('/tasks', payload, undefined, 'Failed to create task')
+    await fetchSubjects()
+    resetAddForm()
+    showAddForm.value = false
+    showMessage('Task created successfully')
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unable to create task'
+    setError(msg)
+  } finally {
+    addLoading.value = false
+  }
+}
 
 const subjectId = parseInt(route.params.id as string)
 const subject = computed(() => subjects.value.find(s => s.id === subjectId))
 
 onMounted(async () => {
   await fetchSubjects()
+  await loadStatuses()
 })
 
-const isTaskCompleted = (task: Task) => task.status?.status === 'completed'
+const isTaskCompleted = (task: Task) => task.status?.status === TASK_STATUS.COMPLETED
 
 type FilterMode = 'all' | 'pending' | 'completed'
 const filterModes: FilterMode[] = ['all', 'pending', 'completed']
@@ -39,9 +116,15 @@ const stats = computed(() => {
   }
 })
 
-const progress = computed(() => {
-  if (!subject.value?.tasks.length) return 0
+
+const completedPercent = computed(() => {
+  if (!stats.value.total) return 0
   return Math.round((stats.value.completed / stats.value.total) * 100)
+})
+
+const pendingPercent = computed(() => {
+  if (!stats.value.total) return 0
+  return 100 - completedPercent.value
 })
 
 const statsForMode = (mode: FilterMode) => {
@@ -159,15 +242,28 @@ const toggleButtonLabel = (task: Task) => isTaskCompleted(task) ? 'Mark as pendi
           </span>
         </div>
 
-        <div class="progress mb-4" v-if="subject.tasks?.length">
-          <div class="progress-bar"
-            role="progressbar"
-            :style="{ width: `${progress}%` }"
-            :aria-valuenow="progress"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          >
-            {{ progress }}% Complete
+        <div v-if="subject.tasks?.length" class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted">{{ stats.completed }} completed · {{ stats.pending }} pending · {{ stats.total }} total</small>
+            <small class="fw-semibold">{{ completedPercent }}% complete</small>
+          </div>
+          <div class="progress mb-4" style="height:12px; border-radius:8px; overflow:hidden">
+            <div
+              class="progress-bar bg-success"
+              role="progressbar"
+              :style="{ width: completedPercent + '%' }"
+              :aria-valuenow="completedPercent"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+            <div
+              class="progress-bar bg-warning"
+              role="progressbar"
+              :style="{ width: pendingPercent + '%' }"
+              :aria-valuenow="pendingPercent"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
           </div>
         </div>
         <div v-if="actionMessage" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -222,6 +318,92 @@ const toggleButtonLabel = (task: Task) => isTaskCompleted(task) ? 'Mark as pendi
            </li>
          </ul>
          <p v-else class="text-muted fst-italic">No tasks yet</p>
+
+         <div v-if="showAddForm" class="mt-4">
+          <h4 class="fw-semibold mb-3">Add Task</h4>
+          <div class="mb-3">
+            <label class="form-label" for="taskTitle">Title</label>
+            <input
+              v-model="addForm.title"
+              type="text"
+              class="form-control"
+              id="taskTitle"
+              placeholder="Enter task title"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="taskDescription">Description</label>
+            <textarea
+              v-model="addForm.description"
+              class="form-control"
+              id="taskDescription"
+              rows="2"
+              placeholder="Enter task description"
+            ></textarea>
+          </div>
+          <div class="row mb-3">
+            <div class="col">
+              <label class="form-label" for="taskDueDate">Due Date</label>
+              <input
+                v-model="addForm.due_date"
+                type="date"
+                class="form-control"
+                id="taskDueDate"
+              />
+            </div>
+            <div class="col">
+              <label class="form-label" for="taskGrade">Grade</label>
+              <input
+                v-model="addForm.grade"
+                type="number"
+                class="form-control"
+                id="taskGrade"
+                placeholder="Enter task grade"
+                min="0"
+                step="any"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="taskStatus">Status</label>
+            <select
+              v-model="addForm.status_id"
+              class="form-select"
+              id="taskStatus"
+            >
+              <option v-for="status in statusesList" :key="status.id" :value="status.id">
+                {{ status.status }}
+              </option>
+            </select>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="showAddForm = false"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click="addTask"
+              :disabled="addLoading"
+            >
+              <span v-if="addLoading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              Save Task
+            </button>
+           </div>
+         </div>
+         <div v-else class="text-center mt-4">
+           <button
+             type="button"
+             class="btn btn-outline-primary"
+             @click="showAddForm = true"
+           >
+             + Add Task
+           </button>
+         </div>
       </div>
     </div>
   </div>
