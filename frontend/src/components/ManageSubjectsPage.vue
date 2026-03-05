@@ -131,8 +131,10 @@ onMounted(async () => {
             <div class="d-flex flex-column flex-md-row gap-3 align-items-start">
               <div class="flex-fill">
                 <div v-if="editingId !== subject.id">
-                  <h3 class="h6 mb-1">{{ subject.name }}</h3>
-                  <p class="text-muted mb-0">{{ subject.my_tasks_count }} tasks · {{ subject.my_pending_tasks_count }} pending</p>
+                  <router-link :to="{ name: 'SubjectDetail', params: { id: String(subject.id) } }" class="text-decoration-none text-reset d-block">
+                    <h3 class="h6 mb-1">{{ subject.name }}</h3>
+                    <p class="text-muted mb-0">{{ subject.my_tasks_count }} tasks · {{ subject.my_pending_tasks_count }} pending</p>
+                  </router-link>
                 </div>
                 <div v-else class="d-flex gap-3 flex-wrap">
                   <input
